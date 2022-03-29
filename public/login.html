@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link href = "main.css" rel = "stylesheet">
+</head>
+<body>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-storage.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+  <script>
+      const firebaseConfig = {
+       
+      };
+      firebase.initializeApp(firebaseConfig)
+  </script>
+
+  
+
+  <!-- 내용시작 -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">사과마켓</a>
+      <span class="ms-auto mx-2" id = "userName">ddd</span>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Features</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Pricing</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled">Disabled</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- 가입하기 -->
+  <div class="container mt-3">
+    <div class="mb-3">
+      <input type="text" class="form-control" placeholder="name" id="name-new">
+    </div>
+    <div class="mb-3">
+      <input type="email" class="form-control" placeholder="email" id="email-new">
+    </div>
+    <div class="mb-3">
+      <input type="password" class="form-control" placeholder="pw" id="pw-new">
+    </div>
+    <button type="submit" class="btn btn-primary" id="register">가입하기</button>
+    </div>
+
+    <!-- 로그인하기 -->
+    <div class="container mt-3">
+        <div class="mb-3">
+          <input type="email" class="form-control" placeholder="email" id="email">
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" placeholder="pw" id="pw">
+        </div>
+        <button type="submit" class="btn btn-primary" id="login">로그인하기</button>
+        <button type="submit" class="btn btn-primary" id="logout">로그아웃</button>
+    </div>
+
+    <!-- firebase -->
+    <script>
+    // db
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    
+    // 유저정보 확인
+    var 뺀거 = localStorage.getItem('user')
+    // $("#userName").html(JSON.parse(뺀거).displayName)
+
+    // 로그인이 되었는지 안되었는지를 통한 프론트엔드 기술(localstorage)
+    // 인증 상태가 변화가 생기면 해당 코드가 실행된다.
+    // 진짜 유저로그인 여부는 아래 메소드가 하지만 유저 정보를 쓸 일이 많다면 localStorage에 넣어야함
+    firebase.auth().onAuthStateChanged((user)=>{
+        // 있으면 로그인 된 상태
+        if(user){
+            console.log(user.uid)
+            console.log(user.displayName)
+            // 상태가 바뀌면 localstorage에 유저 정보 저장
+            localStorage.setItem('user',JSON.stringify(user))
+
+        
+        }
+
+    })
+
+
+
+    // 가입하기
+    $("#register").click(function(){
+        // 회원가입 시작
+        var 이메일 = $('#email-new').val();
+        var 패스워드 = $('#pw-new').val();
+        // 가입기능 업그레이드
+        var 이름 = $('#name-new').val();
+        // 회원 가입 코드 API
+        firebase.auth().createUserWithEmailAndPassword(이메일,패스워드).then((result)=>{
+            
+    
+            //firestore에도 user 컬렉션을 저장해보자 document id는 uid를 쓰는게 좋을 것 같음
+            // 유저정보를 많이 이용해야하면 새로 collection을 이용하는 것이 좋음
+            var 유저정보 = {
+                name : 이름,
+                email : 이메일
+            }
+            db.collection('user').doc(result.user.uid).set(유저정보)
+            
+            console.log(result);
+            // user의 개인정보
+            console.log(result.user);
+            // 가입 기능 업그레이드, 추가 정보 집어넣기
+            result.user.updateProfile({displayName : 이름})
+
+        })
+
+    })
+
+    
+    $("#login").click(function(){
+        // 로그인하기
+        var 이메일 = $('#email').val();
+        var 패스워드 = $('#pw').val();
+        firebase.auth().signInWithEmailAndPassword(이메일,패스워드).then((result)=>{
+            console.log(result.user);
+            // 로그인한 사람만 상품 업로드를 진행하고 싶으면 
+            // 프론트에서막는법, 백엔드에서 막는법(규칙) write는 생성삭제수정 모두 포함
+
+        }).catch((err)=>{
+            console.log(err);
+        })
+    })
+
+    // 로그아웃
+    $("#logout").click(function(){
+        firebase.auth().signOut()
+        // 로컬 정보도 삭제
+        localStorage.removeItem('user')
+    })
+    </script>
+
+</body>
+</html>
